@@ -136,18 +136,15 @@ UMAPPlot(pbmcSeuratObjectNormalized, label =  TRUE)
 DimPlot(pbmcSeuratObjectNormalized, reduction = "umap", split.by = "Condition_study", label =  TRUE)
 
 
-pbmcSeuratObjectNormalized.markers <- FindAllMarkers(pbmcSeuratObjectNormalized, assay = "RNA", test.use = "bimod", only.pos = TRUE, min.pct = 0.10, logfc.threshold = 0.25)
+pbmcSeuratObjectNormalized.allMarkers <- FindAllMarkers(pbmcSeuratObjectNormalized, assay = "RNA", test.use = "bimod", only.pos = FALSE, min.pct = 0.10, logfc.threshold = 0.25)
+pbmcSeuratObjectNormalized.onlyPositiveMarkers <- FindAllMarkers(pbmcSeuratObjectNormalized, assay = "RNA", test.use = "bimod", only.pos = TRUE, min.pct = 0.10, logfc.threshold = 0.25)
 
-View(pbmcSeuratObjectNormalized.markers) 
+dim(pbmcSeuratObjectNormalized.allMarkers) 
+dim(pbmcSeuratObjectNormalized.onlyPositiveMarkers) 
 # Write results to file
-write.csv(pbmcSeuratObjectNormalized.markers, "H:/tsk1File/data/results/all_markers.csv", quote = F)
+write.csv(pbmcSeuratObjectNormalized.allMarkers, "H:/tsk1File/data/results/all_markers.csv", quote = F)
+write.csv(pbmcSeuratObjectNormalized.onlyPositiveMarkers, "H:/tsk1File/data/results/onlyPositiveMarkers.csv", quote = F)
 #======================================================
-# Merge gene annotations to marker results
-pbmcSeuratObjectNormalized.markers <- left_join(pbmcSeuratObjectNormalized.markers, 
-                                                annotations[, c(1:2, 3, 5)], 
-                                                by = c("gene" = "gene_id"))
-
-View(pbmcSeuratObjectNormalized.markers)    
 
 #.........................................................
 # Return top 10 markers for cluster specified 'x'
@@ -192,18 +189,6 @@ for(i in c(0:9)){
   write.csv(head(canonicalCellTypeMarkerGenes),paste0("H:/tsk1File/data/results/canonicalCellTypeMarkerGenesInCluster_", i, ".csv") , quote = F)
 }
 
-
-#---------------------------------------------------  
-#Q3
-#---------------------------------------------------
-#Identify conserved cell type markers
-
-for(i in c(0:9)){
-  canonicalCellTypeMarkerGenes <- FindConservedMarkers(pbmcSeuratObjectNormalized, ident.1 = i, grouping.var = "Condition_study", verbose = FALSE)
-  View(head(canonicalCellTypeMarkerGenes))
-  head(canonicalCellTypeMarkerGenes)
-  write.csv(head(canonicalCellTypeMarkerGenes),paste0("H:/tsk1File/data/results/canonicalCellTypeMarkerGenesInCluster_", i, ".csv") , quote = F)
-}
 
 #---------------------------------------------------
 # test for doc (Cluster 0)
