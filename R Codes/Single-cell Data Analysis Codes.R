@@ -8,13 +8,17 @@ library(stringr)
 library(dplyr)
 library(tidyverse)
 library(cowplot)
+
+library('BiocManager')
+library('multtest')
+library('metap')
 #---------------------------------------------------
 metadata=readRDS("H:/tsk1File/data/esophagus_ID16538_metadataMatrix.rds")
 pbmc <- readRDS(file = "H:/tsk1File/data/esophagus_ID16021_dataMatrixNormalized.rds")
 #---------------------------------------------------
 pbmc_Copy <- data.frame(pbmc)            # Create copy of data
 rownames(pbmc_Copy)=pbmc_Copy[,1]
-
+remove(pbmc)
 #The data frame should be exactly same as column names, and genes as row names. // replace ".." with ": "
 colnames(pbmc_Copy) = gsub("\\.\\.", ": ", colnames(pbmc_Copy), fixed=FALSE) 
 
@@ -182,13 +186,53 @@ DimPlot(pbmcSeuratObjectNormalized, reduction = "umap", split.by = "Condition_st
 
 
 
-
-
 for(i in c(0:9)){
   canonicalCellTypeMarkerGenes <- FindConservedMarkers(pbmcSeuratObjectNormalized, ident.1 = i, grouping.var = "Condition_study", verbose = TRUE)
+  head(canonicalCellTypeMarkerGenes)
+  write.csv(head(canonicalCellTypeMarkerGenes),paste0("H:/tsk1File/data/results/canonicalCellTypeMarkerGenesInCluster_", i, ".csv") , quote = F)
+}
+
+
+#---------------------------------------------------  
+#Q3
+#---------------------------------------------------
+#Identify conserved cell type markers
+
+for(i in c(0:9)){
+  canonicalCellTypeMarkerGenes <- FindConservedMarkers(pbmcSeuratObjectNormalized, ident.1 = i, grouping.var = "Condition_study", verbose = FALSE)
   View(head(canonicalCellTypeMarkerGenes))
   head(canonicalCellTypeMarkerGenes)
   write.csv(head(canonicalCellTypeMarkerGenes),paste0("H:/tsk1File/data/results/canonicalCellTypeMarkerGenesInCluster_", i, ".csv") , quote = F)
 }
-#---------------------------------------------------  
-#Q3
+
+#---------------------------------------------------
+# test for doc (Cluster 0)
+# for cluster 0  (ConservedMarkers)
+FeaturePlot(pbmcSeuratObjectNormalized, features = c("MMP2","COL4A2","RND1","IGFBP4","SELE","CD74"), min.cutoff = "q9") 
+
+FeaturePlot(pbmcSeuratObjectNormalized, features = c("TFF3","CCL21","LYVE1","EFEMP1","MMRN1","SCNN1B"), min.cutoff = "q9") 
+
+#---------------------------------------------------
+# test for doc (Cluster 5, good avg_log2FC and p_val_adj)
+canonicalCe5 <- FindConservedMarkers(pbmcSeuratObjectNormalized, ident.1 = 5, grouping.var = "Condition_study", verbose = FALSE)
+View(head(canonicalCe5))
+
+#---------------------------------------------------
+#Plot for "CCL21" and "MMRN1" in ten clusters for Q4
+FeaturePlot(pbmcSeuratObjectNormalized, features = c("CCL21","MMRN1"), min.cutoff = "q9" , split.by = "Condition_study",keep.scale= "feature",label = TRUE)
+
+#-----------------------------------------
+#Q5
+#top10MarkersAcrossConditions.png
+DotPlot(pbmcSeuratObjectNormalized, features = rownames(top10_markers),
+        cols = c("green", "orange"), dot.scale = 6, 
+        split.by = "Condition_study") + RotatedAxis()
+
+#-------------------------------
+#conserved cell type markers across conditions.png
+markersToPlot <- c("MMP2","COL4A2","RND1","IGFBP4","SELE","CD74","CLU","PRCP","APLNR","CLDN5","TFPI","RAMP3","ACKR1","ADGRF5","ADIRF","ANGPT2","ANGPTL2","APCDD1","PPP1R14A","SEMA3G","FBLN5","GJA5","PCSK5","ARL15","HLA-DRA","HLA-DPA1","HLA-DRB1","TFF3","CCL21","LYVE1","EFEMP1","MMRN1","SCNN1B","FN1","AQP1","AKR1C1","CEBPD","CPE","CYP1B1","ANLN","APOBEC3B","ARHGAP11A","ASF1B","ASPM","AURKB","CLEC14A","GSN","ABCG2","PLVAP","TXNIP","SPARC")
+
+DotPlot(pbmcSeuratObjectNormalized, features = markersToPlot,
+        cols = c("green", "orange"), dot.scale = 6, 
+        split.by = "Condition_study") + RotatedAxis()
+
